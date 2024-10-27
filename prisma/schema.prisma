@@ -1,0 +1,89 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 Int       @id @default(autoincrement())
+  firstname          String    @db.VarChar(30)
+  lastname           String    @db.VarChar(50)
+  email              String    @unique
+  password           String    @db.VarChar(30)
+  role               User_Role @default(USER)
+  createdAt          DateTime  @default(now())
+  projects           Project[] @relation("ProjectOwner")
+  assignerTasks      Task[]    @relation("AssignedUserTasks")
+  projectMemberships Project[] @relation("ProjectMembers")
+  teams              Team[]    @relation("TeamMembers")
+}
+
+model Project {
+  id           Int            @id @default(autoincrement())
+  name         String         @db.VarChar(30)
+  startDate    DateTime?
+  endDate      DateTime?
+  status       Project_Status @default(PLANNED)
+  image        String?
+  owner        User           @relation("ProjectOwner", fields: [ownerId], references: [id])
+  ownerId      Int
+  visibility   Visibility     @default(PRIVATE)
+  tasks        Task[]         @relation("ProjectTasks")
+  members      User[]         @relation("ProjectMembers")
+  projectTeams Team[]         @relation("ProjectTeams")
+}
+
+model Team {
+  id        Int     @id @default(autoincrement())
+  name      String  @db.VarChar(30)
+  image     String?
+  project   Project @relation("ProjectTeams", fields: [projectId], references: [id])
+  projectId Int
+  members   User[]  @relation("TeamMembers")
+  tasks     Task[]  @relation("TeamTasks")
+}
+
+model Task {
+  id          Int         @id @default(autoincrement())
+  title       String      @db.VarChar(20)
+  description String      @db.VarChar(200)
+  startDate   DateTime?
+  endDate     DateTime?
+  status      Task_Status @default(PENDING)
+  level       Int
+  project     Project     @relation("ProjectTasks", fields: [projectId], references: [id])
+  projectId   Int
+  assignedTo  User?       @relation("AssignedUserTasks", fields: [userId], references: [id])
+  userId      Int?
+  team        Team?       @relation("TeamTasks", fields: [teamId], references: [id])
+  teamId      Int?
+}
+
+enum User_Role {
+  USER
+  ADMIN
+  TEAM_MEMBER
+  TEAM_LEADER
+}
+
+enum Visibility {
+  PRIVATE
+  PUBLIC
+}
+
+enum Project_Status {
+  PLANNED
+  ONGOING
+  COMPLETED
+  CANCELED
+}
+
+enum Task_Status {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}

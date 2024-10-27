@@ -1,0 +1,48 @@
+services:
+  main:
+    container_name: main
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    
+    ports:
+      - "8001:8001"
+    networks:
+      - dev-network
+    env_file:
+      - .env.development
+    
+    command: npm run start:dev
+  
+  postgres:
+    image: postgres
+    container_name: db-now-test
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - dev-network
+    environment:
+      POSTGRES_USER: matheusrodriguesaraujo13
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: test_db
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: test-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: matheusrodriguesaraujo13@gmail.com 
+      PGADMIN_DEFAULT_PASSWORD: password
+    ports:
+      - "15432:80"
+    networks:
+      - dev-network
+
+volumes:
+  pgdata:
+
+networks:
+  dev-network:
+    driver: bridge
+    external: true
